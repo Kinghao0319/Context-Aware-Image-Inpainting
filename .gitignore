@@ -1,0 +1,7 @@
+images/dreambooth_dataset/*
+!images/dreambooth_dataset/.gitkeep
+
+exp/output_model
+exp/ca_results
+
+pretrained/runwayml_sd_inpainting
