@@ -3,26 +3,11 @@
 This is the official code repository of paper "Online Data Augmentation and Subject Enhancement for Context-Aware Image Inpainting".
 
 
-<div style="display: flex; justify-content: space-around;">
-  <div style="text-align: center;">
-    <h4>Source</h4>
-    <img src="assets/bear_source.jpg" alt="图片1" style="width: 100px; height: 100px;"><br>
-    <img src="assets/dog_source.jpg" alt="图片4" style="width: 100px; height: 100px;"><br>
-    <img src="assets/duck_source.jpg" alt="图片7" style="width: 100px; height: 100px;">
-  </div>
-  <div style="text-align: center;">
-    <h4>Subject</h4>
-    <img src="assets/bear_subject.jpg" alt="图片2" style="width: 100px; height: 100px;"><br>
-    <img src="assets/dog_subject.jpg" alt="图片5" style="width: 100px; height: 100px;"><br>
-    <img src="assets/duck_subject.jpg" alt="图片8" style="width: 100px; height: 100px;">
-  </div>
-  <div style="text-align: center;">
-    <h4>Result</h4>
-    <img src="assets/bear_ours.jpg" alt="图片3" style="width: 100px; height: 100px;"><br>
-    <img src="assets/dog_ours.jpg" alt="图片6" style="width: 100px; height: 100px;"><br>
-    <img src="assets/duck_ours.jpg" alt="图片9" style="width: 100px; height: 100px;">
-  </div>
-</div>
+| Source | Subject | Result |
+|--------|---------|--------|
+| ![图片1](assets/bear_source.jpg) | ![图片2](assets/bear_subject.jpg) | ![图片3](assets/bear_ours.jpg) |
+| ![图片4](assets/dog_source.jpg) | ![图片5](assets/dog_subject.jpg) | ![图片6](assets/dog_ours.jpg) |
+| ![图片7](assets/duck_source.jpg) | ![图片8](assets/duck_subject.jpg) | ![图片9](assets/duck_ours.jpg) |
 
 ## Environment
 
