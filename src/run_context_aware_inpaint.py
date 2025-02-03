@@ -38,48 +38,7 @@ check_min_version("0.13.0.dev0")
 
 logger = get_logger(__name__)
 
-
-def prepare_mask_and_masked_image(image, mask):
-    image = np.array(image.convert("RGB"))
-    image = image[None].transpose(0, 3, 1, 2)
-    image = torch.from_numpy(image).to(dtype=torch.float32) / 127.5 - 1.0
-
-    mask = np.array(mask.convert("L"))
-    mask = mask.astype(np.float32) / 255.0
-    mask = mask[None, None]
-    mask[mask < 0.5] = 0
-    mask[mask >= 0.5] = 1
-    mask = torch.from_numpy(mask)
-
-    masked_image = image * (mask < 0.5)
-
-    return mask, masked_image
-
-
-# generate random masks
-def random_mask(im_shape, ratio=1, mask_full_image=False):
-    mask = Image.new("L", im_shape, 0)
-    draw = ImageDraw.Draw(mask)
-    size = (random.randint(0, int(im_shape[0] * ratio)), random.randint(0, int(im_shape[1] * ratio)))
-    # use this to always mask the whole image
-    if mask_full_image:
-        size = (int(im_shape[0] * ratio), int(im_shape[1] * ratio))
-    limits = (im_shape[0] - size[0] // 2, im_shape[1] - size[1] // 2)
-    center = (random.randint(size[0] // 2, limits[0]), random.randint(size[1] // 2, limits[1]))
-    draw_type = random.randint(0, 1)
-    if draw_type == 0 or mask_full_image:
-        draw.rectangle(
-            (center[0] - size[0] // 2, center[1] - size[1] // 2, center[0] + size[0] // 2, center[1] + size[1] // 2),
-            fill=255,
-        )
-    else:
-        draw.ellipse(
-            (center[0] - size[0] // 2, center[1] - size[1] // 2, center[0] + size[0] // 2, center[1] + size[1] // 2),
-            fill=255,
-        )
-
-    return mask
-
+username = os.getlogin()
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Simple example of a training script.")
@@ -133,6 +92,12 @@ def parse_args():
         type=int,
         default=None,
         help="Num of instances",
+    )
+    parser.add_argument(
+        "--exp_dir",
+        type=str,
+        default="exp",
+        help="Current experiment directory",
     )
     parser.add_argument(
         "--with_prior_preservation",
@@ -307,6 +272,51 @@ def parse_args():
 
     return args
 
+    
+args = parse_args()
+
+def prepare_mask_and_masked_image(image, mask):
+    image = np.array(image.convert("RGB"))
+    image = image[None].transpose(0, 3, 1, 2)
+    image = torch.from_numpy(image).to(dtype=torch.float32) / 127.5 - 1.0
+
+    mask = np.array(mask.convert("L"))
+    mask = mask.astype(np.float32) / 255.0
+    mask = mask[None, None]
+    mask[mask < 0.5] = 0
+    mask[mask >= 0.5] = 1
+    mask = torch.from_numpy(mask)
+
+    masked_image = image * (mask < 0.5)
+
+    return mask, masked_image
+
+
+# generate random masks
+def random_mask(im_shape, ratio=1, mask_full_image=False):
+    mask = Image.new("L", im_shape, 0)
+    draw = ImageDraw.Draw(mask)
+    size = (random.randint(0, int(im_shape[0] * ratio)), random.randint(0, int(im_shape[1] * ratio)))
+    # use this to always mask the whole image
+    if mask_full_image:
+        size = (int(im_shape[0] * ratio), int(im_shape[1] * ratio))
+    limits = (im_shape[0] - size[0] // 2, im_shape[1] - size[1] // 2)
+    center = (random.randint(size[0] // 2, limits[0]), random.randint(size[1] // 2, limits[1]))
+    draw_type = random.randint(0, 1)
+    if draw_type == 0 or mask_full_image:
+        draw.rectangle(
+            (center[0] - size[0] // 2, center[1] - size[1] // 2, center[0] + size[0] // 2, center[1] + size[1] // 2),
+            fill=255,
+        )
+    else:
+        draw.ellipse(
+            (center[0] - size[0] // 2, center[1] - size[1] // 2, center[0] + size[0] // 2, center[1] + size[1] // 2),
+            fill=255,
+        )
+
+    return mask
+
+
 
 class DreamBoothDataset(Dataset):
     """
@@ -379,7 +389,7 @@ class DreamBoothDataset(Dataset):
         key_name = str(self.instance_images_path[index % self.num_instance_images]).split("/")[-1].split(".")[0]
         if "merged" in key_name and False:
             num = key_name[-1]
-            mask_prefix = "~/code/Context-Aware-Image-Inpainting/exp/masks/obj_mask"
+            mask_prefix = f"/data/{username}/code/Context-Aware-Image-Inpainting/{args.exp_dir}/masks/obj_mask"
             example["mask"] = Image.open(mask_prefix+num+".png")
 
         else:
@@ -431,7 +441,6 @@ class PromptDataset(Dataset):
 
 
 def main():
-    args = parse_args()
     logging_dir = Path(args.output_dir, args.logging_dir)
 
     project_config = ProjectConfiguration(
@@ -727,6 +736,9 @@ def main():
         accelerator.init_trackers("dreambooth", config=vars(args))
 
     # Train!
+    exp_dir = args.exp_dir
+    if not os.path.exists(exp_dir):
+        os.makedirs(exp_dir)
     import time
     t1=time.time()
     total_batch_size = args.train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
@@ -822,7 +834,7 @@ def main():
 
                 # add image_encoder
                 subject_image_num = args.subject_image_num
-                ip_adapter_image = load_image(f"~/code/Context-Aware-Image-Inpainting/exp/resized_imgs/0{step%subject_image_num}.jpg")
+                ip_adapter_image = load_image(f"/data/{username}/code/Context-Aware-Image-Inpainting/{exp_dir}/resized_imgs/0{step%subject_image_num}.jpg")
                 num_images_per_prompt = 1
                 if ip_adapter_image is not None:
                     image_embeds = pipeline.prepare_ip_adapter_image_embeds(
@@ -902,7 +914,7 @@ def main():
     print("train time: " + str(t2-t1) + "s")
 
     # Inference!
-    output_img_dir = "~/code/Context-Aware-Image-Inpainting/exp/ca_results/"
+    output_img_dir = f"/data/{username}/code/Context-Aware-Image-Inpainting/{exp_dir}/ca_results/"
     if not os.path.exists(output_img_dir):
         os.makedirs(output_img_dir)
     pipeline.text_encoder=accelerator.unwrap_model(text_encoder)
@@ -910,8 +922,8 @@ def main():
     pipeline.unet=accelerator.unwrap_model(unet)
     pipeline.to(torch.float32)
 
-    img_url = "~/code/Context-Aware-Image-Inpainting/exp/source.jpg"
-    mask_url = "~/code/Context-Aware-Image-Inpainting/exp/dilated_mask.png"
+    img_url = f"/data/{username}/code/Context-Aware-Image-Inpainting/{exp_dir}/source.jpg"
+    mask_url = f"/data/{username}/code/Context-Aware-Image-Inpainting/{exp_dir}/dilated_mask.png"
     image = Image.open(img_url)
     mask_image = Image.open(mask_url)
 
@@ -919,7 +931,7 @@ def main():
 
     for i in range(start, start+n_samples):
         generator = torch.Generator("cuda").manual_seed(i+100)
-        ip_image = load_image(f"~/code/Context-Aware-Image-Inpainting/exp/resized_imgs/0{step%subject_image_num}.jpg")
+        ip_image = load_image(f"/data/{username}/code/Context-Aware-Image-Inpainting/{exp_dir}/resized_imgs/0{step%subject_image_num}.jpg")
         images = pipeline(prompt=[args.inference_prompt], image=image, mask_image=mask_image, ip_adapter_image=ip_image, generator=generator).images
         images[0].save(output_img_dir + f"out{i}.jpg")
 
