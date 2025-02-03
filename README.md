@@ -2,12 +2,25 @@
 
 This is the official code repository of paper "Online Data Augmentation and Subject Enhancement for Context-Aware Image Inpainting".
 
+<style>
+table {
+  width: 66%;
+  margin: auto;
+  float: left;
+}
+.clearfix {
+  clear: both;
+}
+
+</style>
 
 | Source | Subject | Result |
 |--------|---------|--------|
 | ![图片1](assets/bear_source.jpg) | ![图片2](assets/bear_subject.jpg) | ![图片3](assets/bear_ours.jpg) |
 | ![图片4](assets/dog_source.jpg) | ![图片5](assets/dog_subject.jpg) | ![图片6](assets/dog_ours.jpg) |
 | ![图片7](assets/duck_source.jpg) | ![图片8](assets/duck_subject.jpg) | ![图片9](assets/duck_ours.jpg) |
+
+<div class="clearfix"></div>
 
 ## Environment
 
